@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immigration Document Extractor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📄 Immigration Document Extractor</h1>
+            <p>Extraia dados de documentos de imigração usando OCR</p>
+        </header>
+
+        <main>
+            <!-- Document Type Selection -->
+            <section class="doc-type-section">
+                <h2>Tipo de Documento</h2>
+                <div class="doc-type-buttons">
+                    <button class="doc-type-btn active" data-type="passport">
+                        🛂 Passaporte
+                    </button>
+                    <button class="doc-type-btn" data-type="financial">
+                        💰 Financeiro
+                    </button>
+                    <button class="doc-type-btn" data-type="work_permit">
+                        💼 Work Permit
+                    </button>
+                    <button class="doc-type-btn" data-type="education">
+                        🎓 Educação
+                    </button>
+                </div>
+            </section>
+
+            <!-- File Upload Section -->
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp" hidden>
+                    <div class="upload-content">
+                        <div class="upload-icon">📁</div>
+                        <h3>Arraste arquivos aqui</h3>
+                        <p>ou clique para selecionar</p>
+                        <p class="file-types">PDF, PNG, JPG, TIFF (máx 16MB)</p>
+                        <button class="select-files-btn" id="selectFilesBtn">Selecionar Arquivos</button>
+                    </div>
+                </div>
+
+                <!-- Selected Files List -->
+                <div class="selected-files" id="selectedFiles"></div>
+
+                <!-- Process Button -->
+                <button class="process-btn" id="processBtn" disabled>
+                    Processar Documentos
+                </button>
+
+                <!-- Batch Process Button -->
+                <button class="batch-btn" id="batchBtn" disabled>
+                    Processar em Lote (Auto-detectar tipos)
+                </button>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Processando...</p>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <h2>Resultados</h2>
+                <div id="resultsContainer"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>WAT Framework - Immigration Document Extraction System</p>
+            <p class="footer-note">🔒 Todos os dados são processados localmente. Nada é enviado para servidores externos.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
