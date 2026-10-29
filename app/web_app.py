@@ -76,20 +76,55 @@ def login():
       <meta charset="utf-8">
       <title>Login — Document OCR</title>
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
       <style>
-        body {{ font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0;
-                display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }}
-        form {{ background: #1e293b; padding: 2rem; border-radius: 12px; width: 280px; }}
-        input {{ width: 100%; padding: 0.6rem; margin-top: 0.5rem; border-radius: 6px; border: 1px solid #334155;
-                 background: #0f172a; color: #e2e8f0; box-sizing: border-box; }}
-        button {{ width: 100%; margin-top: 1rem; padding: 0.6rem; border-radius: 6px; border: none;
-                  background: #3b82f6; color: white; font-weight: 600; cursor: pointer; }}
-        p.error {{ color: #f87171; font-size: 0.9rem; }}
+        :root {{
+          --ink: #0f0d0b; --surface: #17140f; --surface-field: #110f0b;
+          --border: #322c21; --border-strong: #4a4132;
+          --text-primary: #f3ede1; --text-secondary: #a89d87; --text-faint: #6b6253;
+          --accent: #e0a73a; --accent-ink: #1a1308; --error: #d4745a;
+        }}
+        * {{ box-sizing: border-box; }}
+        body {{
+          font-family: 'IBM Plex Mono', monospace; background: var(--ink); color: var(--text-primary);
+          display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0;
+          padding: 1.5rem;
+        }}
+        .card {{
+          background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+          padding: 2.25rem 2rem; width: 300px;
+        }}
+        .mark {{
+          font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: var(--accent-ink);
+          background: var(--accent); width: 38px; height: 38px; border-radius: 8px;
+          display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;
+        }}
+        h2 {{
+          font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem; margin: 0 0 0.3rem;
+          color: var(--text-primary);
+        }}
+        p.sub {{ color: var(--text-faint); font-size: 0.78rem; margin: 0 0 1.5rem; letter-spacing: 0.01em; }}
+        input {{
+          width: 100%; padding: 0.7rem 0.8rem; border-radius: 7px; border: 1px solid var(--border-strong);
+          background: var(--surface-field); color: var(--text-primary); font-family: inherit; font-size: 0.9rem;
+        }}
+        input:focus {{ outline: 1px solid var(--accent); outline-offset: 1px; }}
+        button {{
+          width: 100%; margin-top: 1rem; padding: 0.7rem; border-radius: 7px; border: none;
+          background: var(--accent); color: var(--accent-ink); font-weight: 600; font-family: inherit;
+          font-size: 0.85rem; cursor: pointer; transition: background 0.15s;
+        }}
+        button:hover {{ background: #eab75a; }}
+        p.error {{ color: var(--error); font-size: 0.8rem; margin-top: 0.9rem; }}
       </style>
     </head>
     <body>
-      <form method="post">
-        <h2>Entrar</h2>
+      <form class="card" method="post">
+        <div class="mark">UP</div>
+        <h2>Acesso restrito</h2>
+        <p class="sub">Document OCR — equipe UP Immigration</p>
         <input type="password" name="password" placeholder="Senha" autofocus>
         <button type="submit">Entrar</button>
         {f'<p class="error">{error}</p>' if error else ''}
