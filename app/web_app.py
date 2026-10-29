@@ -6,8 +6,10 @@ Flask web app for uploading and processing immigration documents
 
 import os
 import json
+import secrets
+from functools import wraps
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
@@ -19,6 +21,7 @@ from extract_education import EducationExtractor
 from format_output import OutputFormatter
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32)
 CORS(app)
 
 # Configuration
@@ -32,6 +35,74 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # Ensure directories exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+# --- Access control ---
+# API_TOKEN: for machine callers (n8n) via X-API-Token header — no login flow.
+# ACCESS_PASSWORD: for human callers (browser UI) via session login.
+API_TOKEN = os.environ.get('API_TOKEN')
+ACCESS_PASSWORD = os.environ.get('ACCESS_PASSWORD')
+
+
+def require_access(view):
+    """Allow if: valid X-API-Token header, OR an authenticated browser session."""
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if API_TOKEN and request.headers.get('X-API-Token') == API_TOKEN:
+            return view(*args, **kwargs)
+        if session.get('authenticated'):
+            return view(*args, **kwargs)
+        if request.path.startswith('/api/') or request.path in ('/upload',):
+            return jsonify({'error': 'Unauthorized'}), 401
+        return redirect(url_for('login', next=request.path))
+    return wrapped
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if not ACCESS_PASSWORD:
+        return 'Access not configured. Set ACCESS_PASSWORD.', 503
+
+    error = None
+    if request.method == 'POST':
+        if request.form.get('password') == ACCESS_PASSWORD:
+            session['authenticated'] = True
+            return redirect(request.args.get('next') or url_for('index'))
+        error = 'Senha incorreta.'
+
+    return f'''
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <title>Login — Document OCR</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+        body {{ font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0;
+                display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }}
+        form {{ background: #1e293b; padding: 2rem; border-radius: 12px; width: 280px; }}
+        input {{ width: 100%; padding: 0.6rem; margin-top: 0.5rem; border-radius: 6px; border: 1px solid #334155;
+                 background: #0f172a; color: #e2e8f0; box-sizing: border-box; }}
+        button {{ width: 100%; margin-top: 1rem; padding: 0.6rem; border-radius: 6px; border: none;
+                  background: #3b82f6; color: white; font-weight: 600; cursor: pointer; }}
+        p.error {{ color: #f87171; font-size: 0.9rem; }}
+      </style>
+    </head>
+    <body>
+      <form method="post">
+        <h2>Entrar</h2>
+        <input type="password" name="password" placeholder="Senha" autofocus>
+        <button type="submit">Entrar</button>
+        {f'<p class="error">{error}</p>' if error else ''}
+      </form>
+    </body>
+    </html>
+    '''
+
+
+@app.route('/logout')
+def logout():
+    session.pop('authenticated', None)
+    return redirect(url_for('login'))
 
 # Initialize extractors
 extractors = {
@@ -48,12 +119,14 @@ def allowed_file(filename):
 
 
 @app.route('/')
+@require_access
 def index():
     """Serve the main page"""
     return render_template('index.html')
 
 
 @app.route('/upload', methods=['POST'])
+@require_access
 def upload_file():
     """Handle file upload and extraction"""
 
@@ -146,6 +219,7 @@ def upload_file():
 
 
 @app.route('/download/<file_type>/<filename>')
+@require_access
 def download_file(file_type, filename):
     """Download extracted JSON or Markdown files"""
 
@@ -174,6 +248,7 @@ def health_check():
 
 
 @app.route('/api/batch', methods=['POST'])
+@require_access
 def batch_process():
     """Process multiple documents and combine results"""
 
